@@ -208,6 +208,8 @@ export function getPluginType(p: Plugin, platform: string): PluginType {
       return p.ios?.type ?? PluginType.Core;
     case 'android':
       return p.android?.type ?? PluginType.Core;
+    case 'harmony':
+      return p.harmony?.type ?? PluginType.Core;
   }
 
   return PluginType.Core;

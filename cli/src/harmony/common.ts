@@ -49,7 +49,8 @@ export async function resolvePlugin(plugin: Plugin): Promise<Plugin | null> {
     };
     if (
       getIncompatibleCordovaPlugins(platform).includes(plugin.id) ||
-      !getPluginPlatform(plugin, platform)
+      // If the plugin has no platform tag for the android, it's incompatible
+      !getPluginPlatform(plugin, 'android')
     ) {
       plugin.harmony.type = PluginType.Incompatible;
     }
@@ -97,7 +98,7 @@ export async function editProjectSettingsHarmony(
       let stringsJson = await readJSON(stringsPath, { encoding: 'utf-8' });
       for (let i = 0; i < stringsJson.string.length; i++) {
         const stringItem = stringsJson.string[i];
-        if (stringItem.name === 'CareAbility_label') {
+        if (stringItem.name === 'EntryAbility_label') {
           stringItem.value = appName;
           break;
         }

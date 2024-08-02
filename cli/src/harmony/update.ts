@@ -50,6 +50,7 @@ export async function updateHarmony(config: Config): Promise<void> {
 
   printPlugins(capacitorPlugins, 'harmony');
   // TODO 暂未实现鸿蒙插件的更新
+  console.log('暂未实现鸿蒙插件的更新');
   return;
 
   await writePluginsJson(config, capacitorPlugins);

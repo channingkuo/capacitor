@@ -1,4 +1,4 @@
-import { copy as fsCopy, pathExists, remove, writeJSON } from '@ionic/utils-fs';
+import { copy as fsCopy, pathExists, remove, writeJSON, ensureDir } from '@ionic/utils-fs';
 import { basename, join, relative, resolve } from 'path';
 
 import c from '../colors';
@@ -26,6 +26,7 @@ import { allSerial } from '../util/promise';
 import { copyWeb } from '../web/copy';
 
 import { inlineSourceMaps } from './sourcemaps';
+import { mkdir } from 'fs'
 
 export async function copyCommand(
   config: Config,
@@ -144,6 +145,7 @@ export async function copy(
       if (usesFederatedCapacitor) {
         await copyFederatedWebDirs(config, config.harmony.webDirAbs);
         if (config.app.extConfig?.plugins?.FederatedCapacitor?.liveUpdatesKey) {
+          await ensureDir(config.harmony.configDirAbs);
           await copySecureLiveUpdatesKey(
             config.app.extConfig.plugins.FederatedCapacitor.liveUpdatesKey,
             config.app.rootDir,
@@ -158,6 +160,7 @@ export async function copy(
         );
       }
       if (usesLiveUpdates && config.app.extConfig?.plugins?.LiveUpdates?.key) {
+        await ensureDir(config.harmony.configDirAbs);
         await copySecureLiveUpdatesKey(
           config.app.extConfig.plugins.LiveUpdates.key,
           config.app.rootDir,
@@ -165,16 +168,17 @@ export async function copy(
         );
       }
       if (usesSSLPinning && config.app.extConfig?.plugins?.SSLPinning?.certs) {
+        await ensureDir(config.harmony.configDirAbs);
         await copySSLCert(
           config.app.extConfig.plugins.SSLPinning?.certs as unknown as string[],
           config.app.rootDir,
           config.harmony.configDirAbs,
         );
       }
+      await ensureDir(config.harmony.configDirAbs);
       await copyCapacitorConfig(config, config.harmony.configDirAbs);
       const cordovaPlugins = await getCordovaPlugins(config, platformName);
       await handleCordovaPluginsJS(cordovaPlugins, config, platformName);
-      // TODO harmony project settings
     } else if (platformName === config.android.name) {
       if (usesFederatedCapacitor) {
         await copyFederatedWebDirs(config, config.android.webDirAbs);
