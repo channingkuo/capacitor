@@ -17,6 +17,7 @@ import c from './colors';
 import type { Config } from './definitions';
 import { fatal } from './errors';
 import { getIOSPlugins } from './ios/common';
+import { getHarmonyPlugins } from './harmony/common';
 import { logger, logPrompt } from './log';
 import {
   PluginType,
@@ -226,6 +227,8 @@ export async function autoGenerateConfig(
   const fileName = 'config.xml';
   if (platform === 'ios') {
     xmlDir = config.ios.nativeTargetDirAbs;
+  } else if (platform === 'harmony') {
+    xmlDir = config.harmony.configDirAbs;
   }
   await ensureDir(xmlDir);
   const cordovaConfigXMLFile = join(xmlDir, fileName);
@@ -330,6 +333,8 @@ export async function getCordovaPlugins(
     plugins = await getIOSPlugins(allPlugins);
   } else if (platform === config.android.name) {
     plugins = await getAndroidPlugins(allPlugins);
+  } else if (platform === config.harmony.name) {
+    plugins = await getHarmonyPlugins(allPlugins);
   }
   return plugins.filter(p => getPluginType(p, platform) === PluginType.Cordova);
 }

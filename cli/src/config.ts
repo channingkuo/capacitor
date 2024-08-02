@@ -327,10 +327,11 @@ async function loadHarmonyConfig(
   const srcMainDir = `${srcDir}/main`;
   const assetsDir = `${srcMainDir}/resources`;
   const webDir = `${assetsDir}/rawfile`;
-  let apkPath = `${appDir}/build/outputs/hap`;
+  const configDir = `${webDir}/config`;
+  const apkPath = `${appDir}/build/outputs/hap`;
   const appName = 'app-debug.hap';
   const buildOutputDir = `${apkPath}/debug`;
-  const cordovaPluginsDir = 'capacitor-cordova-android-plugins';
+  const cordovaPluginsDir = 'capacitor-cordova-harmony-plugins';
   const ecoStudioPath = lazy(() => determineDevEcoStudioPath(cliConfig.os));
 
   return {
@@ -351,6 +352,8 @@ async function loadHarmonyConfig(
     assetsDirAbs: resolve(platformDirAbs, assetsDir),
     webDir,
     webDirAbs: resolve(platformDirAbs, webDir),
+    configDir,
+    configDirAbs: resolve(platformDirAbs, configDir),
     appName,
     buildOutputDir,
   };

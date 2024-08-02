@@ -140,6 +140,41 @@ export async function copy(
       await handleCordovaPluginsJS(cordovaPlugins, config, platformName);
       const iosPlugins = await getIOSPlugins(allPlugins);
       await generateIOSPackageJSON(config, iosPlugins);
+    } else if (platformName === config.harmony.name) {
+      if (usesFederatedCapacitor) {
+        await copyFederatedWebDirs(config, config.harmony.webDirAbs);
+        if (config.app.extConfig?.plugins?.FederatedCapacitor?.liveUpdatesKey) {
+          await copySecureLiveUpdatesKey(
+            config.app.extConfig.plugins.FederatedCapacitor.liveUpdatesKey,
+            config.app.rootDir,
+            config.harmony.configDirAbs,
+          );
+        }
+      } else {
+        await copyWebDir(
+          config,
+          config.harmony.webDirAbs,
+          config.app.webDirAbs,
+        );
+      }
+      if (usesLiveUpdates && config.app.extConfig?.plugins?.LiveUpdates?.key) {
+        await copySecureLiveUpdatesKey(
+          config.app.extConfig.plugins.LiveUpdates.key,
+          config.app.rootDir,
+          config.harmony.configDirAbs,
+        );
+      }
+      if (usesSSLPinning && config.app.extConfig?.plugins?.SSLPinning?.certs) {
+        await copySSLCert(
+          config.app.extConfig.plugins.SSLPinning?.certs as unknown as string[],
+          config.app.rootDir,
+          config.harmony.configDirAbs,
+        );
+      }
+      await copyCapacitorConfig(config, config.harmony.configDirAbs);
+      const cordovaPlugins = await getCordovaPlugins(config, platformName);
+      await handleCordovaPluginsJS(cordovaPlugins, config, platformName);
+      // TODO harmony project settings
     } else if (platformName === config.android.name) {
       if (usesFederatedCapacitor) {
         await copyFederatedWebDirs(config, config.android.webDirAbs);

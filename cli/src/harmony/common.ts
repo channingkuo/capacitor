@@ -1,7 +1,7 @@
 import {
-  readFile,
+  readJSON,
   pathExists,
-  writeFile,
+  writeJSON,
 } from '@ionic/utils-fs';
 import { join, resolve } from 'path';
 
@@ -73,15 +73,12 @@ export async function editProjectSettingsHarmony(
     .replace(/'/g, "\\'");
 
   const appJson5Path = resolve(config.harmony.appDirAbs, 'app.json5');
-  let appJson5ContentString = await readFile(appJson5Path, { encoding: 'utf-8' });
-  let appJson5Content = JSON.parse(appJson5ContentString);
+  let appJson5Content = await readJSON(appJson5Path, { encoding: 'utf-8' });
   appJson5Content.app.bundleName = appId;
-  appJson5ContentString = JSON.stringify(appJson5Content, null, 2);
-  await writeFile(appJson5Path, appJson5ContentString, { encoding: 'utf-8' });
+  await writeJSON(appJson5Path, appJson5Content, { encoding: 'utf-8' });
 
   const appStringPath = resolve(config.harmony.appDirAbs, 'resources/base/element/string.json');
-  let appString = await readFile(appStringPath, { encoding: 'utf-8' });
-  let appStringContent = JSON.parse(appString);
+  let appStringContent = await readJSON(appStringPath, { encoding: 'utf-8' });
   for (let i = 0; i < appStringContent.string.length; i++) {
     const stringItem = appStringContent.string[i];
     if (stringItem.name === 'app_name') {
@@ -89,8 +86,7 @@ export async function editProjectSettingsHarmony(
       break;
     }
   }
-  appString = JSON.stringify(appStringContent, null, 2);
-  await writeFile(appStringPath, appString, { encoding: 'utf-8' });
+  await writeJSON(appStringPath, appStringContent, { encoding: 'utf-8' });
 
   const stringsParts = ['base', 'en_US', 'zh_CN']
   for (let i = 0; i < stringsParts.length; i++) {
@@ -98,8 +94,7 @@ export async function editProjectSettingsHarmony(
     
     const stringsPath = resolve(config.harmony.assetsDirAbs, stringsPart, 'element/string.json');
     if (await pathExists(stringsPath)) {
-      let stringsValue = await readFile(stringsPath, { encoding: 'utf-8' });
-      let stringsJson = JSON.parse(stringsValue);
+      let stringsJson = await readJSON(stringsPath, { encoding: 'utf-8' });
       for (let i = 0; i < stringsJson.string.length; i++) {
         const stringItem = stringsJson.string[i];
         if (stringItem.name === 'CareAbility_label') {
@@ -107,8 +102,7 @@ export async function editProjectSettingsHarmony(
           break;
         }
       }
-      stringsValue = JSON.stringify(stringsJson, null, 2);
-      await writeFile(stringsPath, stringsValue, { encoding: 'utf-8' });
+      await writeJSON(stringsPath, stringsJson, { encoding: 'utf-8' });
     }
   }
 }

@@ -121,6 +121,8 @@ export interface HarmonyConfig extends PlatformConfig {
   readonly srcMainDirAbs: string;
   readonly webDir: string;
   readonly webDirAbs: string;
+  readonly configDir: string;
+  readonly configDirAbs: string;
   readonly assetsDir: string;
   readonly assetsDirAbs: string;
   readonly buildOutputDir: string;
