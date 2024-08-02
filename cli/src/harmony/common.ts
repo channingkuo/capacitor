@@ -76,7 +76,7 @@ export async function editProjectSettingsHarmony(
   const appJson5Path = resolve(config.harmony.appDirAbs, 'app.json5');
   let appJson5Content = await readJSON(appJson5Path, { encoding: 'utf-8' });
   appJson5Content.app.bundleName = appId;
-  await writeJSON(appJson5Path, appJson5Content, { encoding: 'utf-8' });
+  await writeJSON(appJson5Path, appJson5Content, { encoding: 'utf-8', spaces: '\t' });
 
   const appStringPath = resolve(config.harmony.appDirAbs, 'resources/base/element/string.json');
   let appStringContent = await readJSON(appStringPath, { encoding: 'utf-8' });
@@ -87,7 +87,7 @@ export async function editProjectSettingsHarmony(
       break;
     }
   }
-  await writeJSON(appStringPath, appStringContent, { encoding: 'utf-8' });
+  await writeJSON(appStringPath, appStringContent, { encoding: 'utf-8', spaces: '\t' });
 
   const stringsParts = ['base', 'en_US', 'zh_CN']
   for (let i = 0; i < stringsParts.length; i++) {
@@ -103,7 +103,7 @@ export async function editProjectSettingsHarmony(
           break;
         }
       }
-      await writeJSON(stringsPath, stringsJson, { encoding: 'utf-8' });
+      await writeJSON(stringsPath, stringsJson, { encoding: 'utf-8', spaces: '\t' });
     }
   }
 }
