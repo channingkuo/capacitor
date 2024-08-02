@@ -295,6 +295,9 @@ async function getWebDir(config: Config, platform: string): Promise<string> {
   if (platform === 'android') {
     return config.android.webDirAbs;
   }
+  if (platform === 'harmony') {
+    return config.harmony.webDirAbs;
+  }
   return '';
 }
 

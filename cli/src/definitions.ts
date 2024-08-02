@@ -46,6 +46,7 @@ export interface CLIConfig {
   readonly assets: {
     readonly ios: PlatformAssetsConfig;
     readonly android: PlatformAssetsConfig;
+    readonly harmony: PlatformAssetsConfig;
   };
   readonly package: PackageJson;
   readonly os: OS;
@@ -107,6 +108,34 @@ export interface AndroidConfig extends PlatformConfig {
   };
 }
 
+export interface HarmonyConfig extends PlatformConfig {
+  readonly cordovaPluginsDir: string;
+  readonly cordovaPluginsDirAbs: string;
+  readonly ecoStudioPath: Promise<string>;
+  readonly minVersion: string;
+  readonly appDir: string;
+  readonly appDirAbs: string;
+  readonly srcDir: string;
+  readonly srcDirAbs: string;
+  readonly srcMainDir: string;
+  readonly srcMainDirAbs: string;
+  readonly webDir: string;
+  readonly webDirAbs: string;
+  readonly assetsDir: string;
+  readonly assetsDirAbs: string;
+  readonly buildOutputDir: string;
+  readonly appName: string;
+  // readonly flavor: string;
+  // readonly buildOptions: {
+  //   keystorePath?: string;
+  //   keystorePassword?: string;
+  //   keystoreAlias?: string;
+  //   keystoreAliasPassword?: string;
+  //   releaseType?: 'AAB' | 'APK';
+  //   signingType?: 'apksigner' | 'jarsigner';
+  // };
+}
+
 export interface IOSConfig extends PlatformConfig {
   readonly cordovaPluginsDir: string;
   readonly cordovaPluginsDirAbs: string;
@@ -129,6 +158,7 @@ export type WebConfig = PlatformConfig;
 
 export interface Config {
   readonly android: AndroidConfig;
+  readonly harmony: HarmonyConfig;
   readonly ios: IOSConfig;
   readonly web: WebConfig;
   readonly cli: CLIConfig;

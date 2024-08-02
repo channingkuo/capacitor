@@ -4,6 +4,7 @@
   "workspaces": [
     "android",
     "ios",
+    "harmony",
     "cli",
     "core"
   ],

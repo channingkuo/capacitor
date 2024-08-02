@@ -12,6 +12,7 @@ import c from './colors';
 import { parseApkNameFromFlavor } from './common';
 import type {
   AndroidConfig,
+  HarmonyConfig,
   AppConfig,
   CLIConfig,
   Config,
@@ -66,6 +67,7 @@ export async function loadConfig(): Promise<Config> {
 
   const config: Config = {
     android: await loadAndroidConfig(appRootDir, conf.extConfig, cli),
+    harmony: await loadHarmonyConfig(appRootDir, conf.extConfig, cli),
     ios: await loadIOSConfig(appRootDir, conf.extConfig),
     web: await loadWebConfig(appRootDir, webDir),
     cli,
@@ -199,6 +201,9 @@ async function loadCLIConfig(rootDir: string): Promise<CLIConfig> {
   const androidPlatformTemplateArchive = 'android-template.tar.gz';
   const androidCordovaPluginsTemplateArchive =
     'capacitor-cordova-android-plugins.tar.gz';
+  const harmonyPlatformTemplateArchive = 'harmony-template.tar.gz';
+  const harmonyCordovaPluginsTemplateArchive =
+    'capacitor-cordova-harmony-plugins.tar.gz';
 
   return {
     rootDir,
@@ -227,6 +232,18 @@ async function loadCLIConfig(rootDir: string): Promise<CLIConfig> {
         cordovaPluginsTemplateArchiveAbs: resolve(
           assetsDirAbs,
           androidCordovaPluginsTemplateArchive,
+        ),
+      },
+      harmony: {
+        platformTemplateArchive: harmonyPlatformTemplateArchive,
+        platformTemplateArchiveAbs: resolve(
+          assetsDirAbs,
+          harmonyPlatformTemplateArchive,
+        ),
+        cordovaPluginsTemplateArchive: harmonyCordovaPluginsTemplateArchive,
+        cordovaPluginsTemplateArchiveAbs: resolve(
+          assetsDirAbs,
+          harmonyCordovaPluginsTemplateArchive,
         ),
       },
     },
@@ -293,6 +310,49 @@ async function loadAndroidConfig(
     buildOutputDirAbs: resolve(platformDirAbs, buildOutputDir),
     flavor,
     buildOptions,
+  };
+}
+
+async function loadHarmonyConfig(
+  rootDir: string,
+  extConfig: ExternalConfig,
+  cliConfig: CLIConfig,
+): Promise<HarmonyConfig> {
+  const name = 'harmony';
+  const platformDir = extConfig.harmony?.path ?? 'harmony';
+  const platformDirAbs = resolve(rootDir, platformDir);
+  const appDir = 'entry';
+  const AppScopeDir = 'AppScope';
+  const srcDir = `${appDir}/src`;
+  const srcMainDir = `${srcDir}/main`;
+  const assetsDir = `${srcMainDir}/resources`;
+  const webDir = `${assetsDir}/rawfile`;
+  let apkPath = `${appDir}/build/outputs/hap`;
+  const appName = 'app-debug.hap';
+  const buildOutputDir = `${apkPath}/debug`;
+  const cordovaPluginsDir = 'capacitor-cordova-android-plugins';
+  const ecoStudioPath = lazy(() => determineDevEcoStudioPath(cliConfig.os));
+
+  return {
+    name,
+    minVersion: '10',
+    ecoStudioPath,
+    platformDir,
+    platformDirAbs,
+    cordovaPluginsDir,
+    cordovaPluginsDirAbs: resolve(platformDirAbs, cordovaPluginsDir),
+    appDir,
+    appDirAbs: resolve(platformDirAbs, AppScopeDir),
+    srcDir,
+    srcDirAbs: resolve(platformDirAbs, srcDir),
+    srcMainDir,
+    srcMainDirAbs: resolve(platformDirAbs, srcMainDir),
+    assetsDir,
+    assetsDirAbs: resolve(platformDirAbs, assetsDir),
+    webDir,
+    webDirAbs: resolve(platformDirAbs, webDir),
+    appName,
+    buildOutputDir,
   };
 }
 
@@ -417,6 +477,48 @@ async function determineIOSWebDirAbs(
   }
 
   return resolve(nativeTargetDirAbs, 'public');
+}
+
+async function determineDevEcoStudioPath(os: OS): Promise<string> {
+  if (process.env.CAPACITOR_ANDROID_STUDIO_PATH) {
+    return process.env.CAPACITOR_ANDROID_STUDIO_PATH;
+  }
+
+  switch (os) {
+    case OS.Mac:
+      return '/Applications/DevEco-Studio.app';
+    case OS.Windows: {
+      const { runCommand } = await import('./util/subprocess');
+
+      // TODO check for DevEco-Studio
+      let p = 'C:\\Program Files\\Android\\DevEco-Studio\\bin\\studio64.exe';
+
+      try {
+        if (!(await pathExists(p))) {
+          let commandResult = await runCommand('REG', [
+            'QUERY',
+            'HKEY_LOCAL_MACHINE\\SOFTWARE\\Android Studio',
+            '/v',
+            'Path',
+          ]);
+          commandResult = commandResult.replace(/(\r\n|\n|\r)/gm, '');
+          const i = commandResult.indexOf('REG_SZ');
+          if (i > 0) {
+            p = commandResult.substring(i + 6).trim() + '\\bin\\studio64.exe';
+          }
+        }
+      } catch (e) {
+        debug(`Error checking registry for Android Studio path: %O`, e);
+        break;
+      }
+
+      return p;
+    }
+    case OS.Linux:
+      return '/usr/local/android-studio/bin/studio.sh';
+  }
+
+  return '';
 }
 
 async function determineAndroidStudioPath(os: OS): Promise<string> {

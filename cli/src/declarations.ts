@@ -295,6 +295,130 @@ export interface CapacitorConfig {
     useLegacyBridge?: boolean;
   };
 
+  harmony?: {
+    /**
+     * Specify a custom path to the native Harmony project.
+     *
+     * @since 3.0.0
+     * @default android
+     */
+    path?: string;
+
+    /**
+     * User agent of Capacitor Web View on Harmony.
+     *
+     * Overrides global `overrideUserAgent` option.
+     *
+     * @since 1.4.0
+     */
+    overrideUserAgent?: string;
+
+    /**
+     * String to append to the original user agent of Capacitor Web View for Harmony.
+     *
+     * Overrides global `appendUserAgent` option.
+     *
+     * This is disregarded if `overrideUserAgent` is used.
+     *
+     * @since 1.4.0
+     */
+    appendUserAgent?: string;
+
+    /**
+     * Background color of the Capacitor Web View for Harmony.
+     *
+     * Overrides global `backgroundColor` option.
+     *
+     * @since 1.1.0
+     */
+    backgroundColor?: string;
+
+    /**
+     * Enable zooming within the Capacitor Web View for Harmony.
+     *
+     * @default false
+     * @since 6.0.0
+     */
+    zoomEnabled?: boolean;
+
+    /**
+     * Enable mixed content in the Capacitor Web View for Harmony.
+     *
+     * [Mixed content](https://developer.mozilla.org/en-US/docs/Web/Security/Mixed_content)
+     * is disabled by default for security. During development, you may need to
+     * enable it to allow the Web View to load files from different schemes.
+     *
+     * **This is not intended for use in production.**
+     *
+     * @since 1.0.0
+     * @default false
+     */
+    allowMixedContent?: boolean;
+
+    /**
+     * This enables a simpler keyboard which may have some limitations.
+     *
+     * This will capture JS keys using an alternative
+     * [`InputConnection`](https://developer.android.com/reference/android/view/inputmethod/InputConnection).
+     *
+     * @since 1.0.0
+     * @default false
+     */
+    captureInput?: boolean;
+
+    /**
+     * Always enable debuggable web content.
+     *
+     * This is automatically enabled during development.
+     *
+     * @since 1.0.0
+     * @default false
+     */
+    webContentsDebuggingEnabled?: boolean;
+
+    /**
+     * The build configuration under which Capacitor will generate logs on Harmony.
+     *
+     * Overrides global `loggingBehavior` option.
+     *
+     * @since 3.0.0
+     * @default debug
+     */
+    loggingBehavior?: 'none' | 'debug' | 'production';
+
+    /**
+     * Allowlist of plugins to include during `npx cap sync` for Harmony.
+     *
+     * Overrides global `includePlugins` option.
+     *
+     * @since 3.0.0
+     */
+    includePlugins?: string[];
+
+    /**
+     * Whether to give the webview initial focus.
+     *
+     * @since 3.5.1
+     * @default true
+     */
+    initialFocus?: boolean;
+
+    /**
+     * TODO change
+     * The minimum supported webview version on Harmony supported by your app.
+     *
+     * The minimum supported cannot be lower than version `55`, which is required for Capacitor.
+     *
+     * If the device uses a lower WebView version, an error message will be shown on Logcat.
+     * If `server.errorPath` is configured, the WebView will redirect to that file, so can be
+     * used to show a custom error.
+     *
+     * @since 4.0.0
+     * @default 60
+     */
+    minWebViewVersion?: number;
+  };
+
   ios?: {
     /**
      * Specify a custom path to the native iOS project.

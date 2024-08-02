@@ -21,6 +21,9 @@ export interface PluginManifest {
   readonly android?: {
     readonly src?: string;
   };
+  readonly harmony?: {
+    readonly src?: string;
+  };
 }
 
 export interface Plugin {
@@ -40,6 +43,10 @@ export interface Plugin {
     type: PluginType;
     path: string;
   };
+  harmony?: {
+    type: PluginType;
+    path: string;
+  };
 }
 
 export function getIncludedPluginPackages(
@@ -53,6 +60,8 @@ export function getIncludedPluginPackages(
       return extConfig.android?.includePlugins ?? extConfig.includePlugins;
     case 'ios':
       return extConfig.ios?.includePlugins ?? extConfig.includePlugins;
+    case 'harmony':
+      return extConfig.harmony?.includePlugins ?? extConfig.includePlugins;
   }
 }
 

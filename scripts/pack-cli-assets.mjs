@@ -10,10 +10,12 @@ execute(async () => {
   const assetsDir = resolve(root, 'cli', 'assets');
 
   const templates = [
+    'harmony-template',
     'android-template',
     'ios-pods-template',
     'ios-spm-template',
     'capacitor-cordova-android-plugins',
+    'capacitor-cordova-harmony-plugins',
     'capacitor-cordova-ios-plugins',
   ];
 

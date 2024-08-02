@@ -291,6 +291,8 @@ function getPlatformDirectory(config: Config, platform: string): string | null {
   switch (platform) {
     case 'android':
       return config.android.platformDirAbs;
+    case 'harmony':
+      return config.harmony.platformDirAbs;
     case 'ios':
       return config.ios.platformDirAbs;
     case 'web':
@@ -350,7 +352,7 @@ export async function selectPlatforms(
 }
 
 export async function getKnownPlatforms(): Promise<string[]> {
-  return ['web', 'android', 'ios'];
+  return ['web', 'android', 'ios', 'harmony'];
 }
 
 export async function isValidPlatform(platform: string): Promise<boolean> {
@@ -482,6 +484,10 @@ export async function getAddedPlatforms(config: Config): Promise<string[]> {
 
   if (await getProjectPlatformDirectory(config, config.ios.name)) {
     platforms.push(config.ios.name);
+  }
+
+  if (await getProjectPlatformDirectory(config, config.harmony.name)) {
+    platforms.push(config.harmony.name);
   }
 
   platforms.push(config.web.name);

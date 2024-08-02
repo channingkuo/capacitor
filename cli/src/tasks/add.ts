@@ -6,6 +6,8 @@ import {
   editProjectSettingsAndroid,
   checkAndroidPackage,
 } from '../android/common';
+import { addHarmony } from '../harmony/add';
+import { checkHarmonyPackage, editProjectSettingsHarmony } from '../harmony/common';
 import c from '../colors';
 import {
   getKnownPlatforms,
@@ -147,6 +149,8 @@ function addChecks(config: Config, platformName: string): CheckFunction[] {
     ];
   } else if (platformName === config.android.name) {
     return [() => checkAndroidPackage(config)];
+  } else if (platformName === config.harmony.name) {
+    return [() => checkHarmonyPackage(config)];
   } else if (platformName === config.web.name) {
     return [];
   } else {
@@ -160,6 +164,8 @@ async function doAdd(config: Config, platformName: string): Promise<void> {
       await addIOS(config);
     } else if (platformName === config.android.name) {
       await addAndroid(config);
+    } else if (platformName === config.harmony.name) {
+      await addHarmony(config);
     }
   });
 }
@@ -169,6 +175,8 @@ async function editPlatforms(config: Config, platformName: string) {
     await editProjectSettingsIOS(config);
   } else if (platformName === config.android.name) {
     await editProjectSettingsAndroid(config);
+  } else if (platformName === config.harmony.name) {
+    await editProjectSettingsHarmony(config);
   }
 }
 
