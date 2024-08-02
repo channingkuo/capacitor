@@ -15,6 +15,7 @@ import type { Config } from '../definitions';
 import { fatal, isFatal } from '../errors';
 import { checkBundler, checkCocoaPods } from '../ios/common';
 import { updateIOS } from '../ios/update';
+import { updateHarmony } from '../harmony/update';
 import { logger } from '../log';
 import { allSerial } from '../util/promise';
 
@@ -70,6 +71,8 @@ export function updateChecks(
       checks.push(() => checkBundler(config) || checkCocoaPods(config));
     } else if (platformName === config.android.name) {
       continue;
+    } else if (platformName === config.harmony.name) {
+      continue;
     } else if (platformName === config.web.name) {
       continue;
     } else {
@@ -96,6 +99,8 @@ export async function update(
       await updateIOS(config, deployment);
     } else if (platformName === config.android.name) {
       await updateAndroid(config);
+    } else if (platformName === config.harmony.name) {
+      await updateHarmony(config);
     }
 
     await runHooks(
