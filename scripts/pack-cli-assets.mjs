@@ -15,7 +15,6 @@ execute(async () => {
     'ios-pods-template',
     'ios-spm-template',
     'capacitor-cordova-android-plugins',
-    'capacitor-cordova-harmony-plugins',
     'capacitor-cordova-ios-plugins',
   ];
 

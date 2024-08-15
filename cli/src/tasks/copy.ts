@@ -177,8 +177,8 @@ export async function copy(
       }
       await ensureDir(config.harmony.configDirAbs);
       await copyCapacitorConfig(config, config.harmony.configDirAbs);
-      const cordovaPlugins = await getCordovaPlugins(config, platformName);
-      await handleCordovaPluginsJS(cordovaPlugins, config, platformName);
+      // const cordovaPlugins = await getCordovaPlugins(config, platformName);
+      // await handleCordovaPluginsJS(cordovaPlugins, config, platformName);
     } else if (platformName === config.android.name) {
       if (usesFederatedCapacitor) {
         await copyFederatedWebDirs(config, config.android.webDirAbs);

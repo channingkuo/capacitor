@@ -209,12 +209,12 @@ export class JSExport {
   }
 
   static getPluginModuleName(plugin: Record<string, string>): string {
-    const pluginSplit = plugin['pkg'].split('/');
-    return pluginSplit.length <= 0 ? '' : pluginSplit[pluginSplit.length - 1];
+    const pluginSplit = plugin['module'];
+    return pluginSplit.toLowerCase();
   }
 
   static getPluginName(plugin: Record<string, string>): string {
-    const pluginName = plugin['classpath'];
+    const pluginName = plugin['plugin'];
     return pluginName.endsWith('Plugin') ? pluginName : `${pluginName}Plugin`;
   }
 }
