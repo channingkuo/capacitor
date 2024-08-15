@@ -1,6 +1,6 @@
 /**
  * Note: When making changes to this file, run `npm run build:nativebridge`
- * afterwards to build the nativebridge.js files to the android and iOS projects.
+ * afterwards to build the nativebridge.js files to the android and harmony and iOS projects.
  */
 import type { HttpResponse } from './src/core-plugins';
 import type {
@@ -151,11 +151,13 @@ const createProxyUrl = (url: string, win: WindowCapacitor): string => {
 };
 
 const initBridge = (w: any): void => {
-  const getPlatformId = (win: WindowCapacitor): 'android' | 'ios' | 'web' => {
+  const getPlatformId = (win: WindowCapacitor): 'android' | 'ios' | 'harmony' | 'web' => {
     if (win?.androidBridge) {
       return 'android';
     } else if (win?.webkit?.messageHandlers?.bridge) {
       return 'ios';
+    } else if (win?.harmonyBridge || win?.harmony) {
+      return 'harmony';
     } else {
       return 'web';
     }
@@ -426,7 +428,7 @@ const initBridge = (w: any): void => {
 
     const platform = getPlatformId(win);
 
-    if (platform == 'android' || platform == 'ios') {
+    if (platform == 'android' || platform == 'ios' || platform == 'harmony') {
       // patch document.cookie on Android/iOS
       win.CapacitorCookiesDescriptor =
         Object.getOwnPropertyDescriptor(Document.prototype, 'cookie') ||
@@ -453,6 +455,10 @@ const initBridge = (w: any): void => {
         if (isCookiesEnabled === true) {
           doPatchCookies = true;
         }
+      }
+      // TODO handle cookie logic for harmony platform
+      else if (platform === 'harmony') {
+        // doPatchCookies = true;
       }
 
       if (doPatchCookies) {
@@ -541,6 +547,10 @@ const initBridge = (w: any): void => {
         if (isHttpEnabled === true) {
           doPatchHttp = true;
         }
+      }
+      // TODO handle http logic for harmony platform
+      else if (platform === 'harmony') {
+        // doPatchCookies = true;
       }
 
       if (doPatchHttp) {
@@ -994,6 +1004,16 @@ const initBridge = (w: any): void => {
       postToNative = data => {
         try {
           win.androidBridge.postMessage(JSON.stringify(data));
+        } catch (e) {
+          win?.console?.error(e);
+        }
+      };
+    } else if (getPlatformId(win) === 'harmony') {
+      // harmony platform
+      postToNative = data => {
+        try {
+          // win.harmonyBridge.postMessage(JSON.stringify(data));
+          win.harmonyBridge.postMessage({data: data, callback: returnResult});
         } catch (e) {
           win?.console?.error(e);
         }

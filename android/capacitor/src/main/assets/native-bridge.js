@@ -168,6 +168,9 @@ var nativeBridge = (function (exports) {
             else if ((_b = (_a = win === null || win === void 0 ? void 0 : win.webkit) === null || _a === void 0 ? void 0 : _a.messageHandlers) === null || _b === void 0 ? void 0 : _b.bridge) {
                 return 'ios';
             }
+            else if ((win === null || win === void 0 ? void 0 : win.harmonyBridge) || (win === null || win === void 0 ? void 0 : win.harmony)) {
+                return 'harmony';
+            }
             else {
                 return 'web';
             }
@@ -399,7 +402,7 @@ var nativeBridge = (function (exports) {
                 }
             };
             const platform = getPlatformId(win);
-            if (platform == 'android' || platform == 'ios') {
+            if (platform == 'android' || platform == 'ios' || platform == 'harmony') {
                 // patch document.cookie on Android/iOS
                 win.CapacitorCookiesDescriptor =
                     Object.getOwnPropertyDescriptor(Document.prototype, 'cookie') ||
@@ -423,6 +426,8 @@ var nativeBridge = (function (exports) {
                         doPatchCookies = true;
                     }
                 }
+                // TODO 处理harmony平台的 cookie 逻辑
+                else ;
                 if (doPatchCookies) {
                     Object.defineProperty(document, 'cookie', {
                         get: function () {
@@ -498,6 +503,8 @@ var nativeBridge = (function (exports) {
                         doPatchHttp = true;
                     }
                 }
+                // TODO 处理harmony平台的 http 逻辑
+                else ;
                 if (doPatchHttp) {
                     // fetch patch
                     window.fetch = async (resource, options) => {
@@ -836,6 +843,19 @@ var nativeBridge = (function (exports) {
                     var _a;
                     try {
                         win.androidBridge.postMessage(JSON.stringify(data));
+                    }
+                    catch (e) {
+                        (_a = win === null || win === void 0 ? void 0 : win.console) === null || _a === void 0 ? void 0 : _a.error(e);
+                    }
+                };
+            }
+            else if (getPlatformId(win) === 'harmony') {
+                // harmony platform
+                postToNative = data => {
+                    var _a;
+                    try {
+                        // win.harmonyBridge.postMessage(JSON.stringify(data));
+                        win.harmonyBridge.postMessage({ data: data, callback: returnResult });
                     }
                     catch (e) {
                         (_a = win === null || win === void 0 ? void 0 : win.console) === null || _a === void 0 ? void 0 : _a.error(e);

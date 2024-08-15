@@ -3,6 +3,18 @@
     {
       "name": "page_show",
       "value": "page from package"
+    },
+    {
+      "name": "alert_btn_ok",
+      "value": "确定"
+    },
+    {
+      "name": "alert_btn_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "alert_btn_tips",
+      "value": "温馨提示"
     }
   ]
 }

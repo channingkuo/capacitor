@@ -1,6 +1,15 @@
 {
   "apiType": "stageMode",
   "buildOption": {
+    "arkOptions": {
+      "runtimeOnly": {
+        // Only used for parameter dynamic import
+        // name must same to dependencies name in oh-package.json5
+        "packages": [
+          "capacitor"
+        ]
+      },
+    }
   },
   "buildOptionSet": [
     {

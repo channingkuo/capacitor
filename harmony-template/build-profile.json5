@@ -30,6 +30,10 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Capacitor",
+      "srcPath": "../node_modules/@capacitor/harmony/Capacitor"
     }
   ]
 }

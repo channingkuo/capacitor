@@ -17,6 +17,14 @@ export default {
       sourcemap: false,
     },
     {
+      file: '../harmony/Capacitor/src/main/resources/rawfile/native-bridge.js',
+      format: 'iife',
+      name: 'nativeBridge',
+      preferConst: true,
+      banner,
+      sourcemap: false,
+    },
+    {
       file: '../ios/Capacitor/Capacitor/assets/native-bridge.js',
       format: 'iife',
       name: 'nativeBridge',

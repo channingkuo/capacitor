@@ -197,9 +197,9 @@ export interface WindowCapacitor {
     onmessage?: (event: { data: string }) => void;
   };
   harmonyBridge?: {
-    postMessage(data: string): void;
-    onmessage?: (event: { data: string }) => void;
+    postMessage(data: any): void;
   };
+  harmony?: boolean;
   webkit?: {
     messageHandlers?: {
       bridge: {

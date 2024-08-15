@@ -227,8 +227,6 @@ export async function autoGenerateConfig(
   const fileName = 'config.xml';
   if (platform === 'ios') {
     xmlDir = config.ios.nativeTargetDirAbs;
-  } else if (platform === 'harmony') {
-    xmlDir = config.harmony.configDirAbs;
   }
   await ensureDir(xmlDir);
   const cordovaConfigXMLFile = join(xmlDir, fileName);

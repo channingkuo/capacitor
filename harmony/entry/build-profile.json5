@@ -1,6 +1,14 @@
 {
   "apiType": "stageMode",
   "buildOption": {
+    "arkOptions": {
+      "runtimeOnly": {
+        // Only used for parameter dynamic import
+        "packages": [
+          "capacitor",
+        ]
+      },
+    }
   },
   "buildOptionSet": [
     {

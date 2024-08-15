@@ -3,6 +3,18 @@
     {
       "name": "page_show",
       "value": "page from package"
+    },
+    {
+      "name": "alert_btn_ok",
+      "value": "Ok"
+    },
+    {
+      "name": "alert_btn_cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "alert_btn_tips",
+      "value": "Tips"
     }
   ]
 }

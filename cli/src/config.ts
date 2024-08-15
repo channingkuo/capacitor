@@ -336,7 +336,7 @@ async function loadHarmonyConfig(
 
   return {
     name,
-    minVersion: '10',
+    minVersion: '11',
     ecoStudioPath,
     platformDir,
     platformDirAbs,

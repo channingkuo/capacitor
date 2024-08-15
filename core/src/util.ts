@@ -40,8 +40,8 @@ export const getPlatformId = (
     return 'android';
   } else if (win?.webkit?.messageHandlers?.bridge) {
     return 'ios';
-  } else if (win?.harmonyBridge) {
-    return 'android';
+  } else if (win?.harmonyBridge || win?.harmony) {
+    return 'harmony';
   } else {
     return 'web';
   }

@@ -127,15 +127,6 @@ export interface HarmonyConfig extends PlatformConfig {
   readonly assetsDirAbs: string;
   readonly buildOutputDir: string;
   readonly appName: string;
-  // readonly flavor: string;
-  // readonly buildOptions: {
-  //   keystorePath?: string;
-  //   keystorePassword?: string;
-  //   keystoreAlias?: string;
-  //   keystoreAliasPassword?: string;
-  //   releaseType?: 'AAB' | 'APK';
-  //   signingType?: 'apksigner' | 'jarsigner';
-  // };
 }
 
 export interface IOSConfig extends PlatformConfig {
