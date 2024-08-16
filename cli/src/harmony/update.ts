@@ -1,41 +1,26 @@
 import {
   copy,
-  remove,
   pathExists,
-  readdirp,
   readFile,
   readJSON,
   writeFile,
   writeJSON,
+  mkdirSync,
 } from '@ionic/utils-fs';
+import JSON5 from 'json5';
 import Debug from 'debug';
-import { dirname, extname, join, relative, resolve } from 'path';
+import { basename, resolve } from 'path';
 
-import c from '../colors';
 import { checkPlatformVersions, runTask } from '../common';
-import {
-  checkPluginDependencies,
-  handleCordovaPluginsJS,
-  writeCordovaAndroidManifest,
-} from '../cordova';
 import type { Config } from '../definitions';
-import { fatal } from '../errors';
 import {
   PluginType,
-  getAllElements,
-  getFilePath,
-  getPlatformElement,
-  getPluginPlatform,
   getPluginType,
   getPlugins,
   printPlugins,
 } from '../plugin';
 import type { Plugin } from '../plugin';
 import { copy as copyTask } from '../tasks/copy';
-import { patchOldCapacitorPlugins } from '../tasks/migrate';
-import { convertToUnixPath } from '../util/fs';
-import { resolveNode } from '../util/node';
-import { extractTemplate } from '../util/template';
 
 import { getHarmonyPlugins } from './common';
 
@@ -51,24 +36,15 @@ export async function updateHarmony(config: Config): Promise<void> {
 
   printPlugins(capacitorPlugins, 'harmony');
 
+  const srcPath = resolve(config.app.rootDir, 'node_modules', '@capacitor', config.harmony.name, 'capacitor');
+  const targetPath = resolve(config.app.rootDir, config.harmony.name, 'capacitor');
+  mkdirSync(targetPath, { recursive: true })
+  copy(srcPath, targetPath);
+
   await writePluginsJson(config, capacitorPlugins);
-  // await removePluginsNativeFiles(config);
-  // const cordovaPlugins = plugins.filter(
-  //   p => getPluginType(p, platform) === PluginType.Cordova,
-  // );
-  // await patchOldCapacitorPlugins(config);
-  // if (cordovaPlugins.length > 0) {
-  //   await copyPluginsNativeFiles(config, cordovaPlugins);
-  // }
   if (!(await pathExists(config.harmony.webDirAbs))) {
     await copyTask(config, platform);
   }
-  // await handleCordovaPluginsJS(cordovaPlugins, config, platform);
-  // await checkPluginDependencies(plugins, platform);
-  // await installGradlePlugins(config, capacitorPlugins, cordovaPlugins);
-  // await handleCordovaPluginsGradle(config, cordovaPlugins);
-  // await writeCordovaAndroidManifest(cordovaPlugins, config, platform);
-
   const incompatibleCordovaPlugins = plugins.filter(
     p => getPluginType(p, platform) === PluginType.Incompatible,
   );
@@ -76,13 +52,11 @@ export async function updateHarmony(config: Config): Promise<void> {
   await checkPlatformVersions(config, platform);
 }
 
-// function getGradlePackageName(id: string): string {
-//   return id.replace('@', '').replace('/', '-');
-// }
-
 interface PluginsJsonEntry {
   plugin: string;
+  pluginClass: string;
   module: string;
+  moduleAlias: string;
 }
 
 async function writePluginsJson(
@@ -97,8 +71,46 @@ async function writePluginsJson(
 
   await writeJSON(pluginsJsonPath, pluginJsonEntry, { spaces: '\t' });
 
-  // TODO update json5 file with the new plugins
-  console.log('TODO: update json5 file with the new plugins')
+  const srcPath = resolve(config.app.rootDir, config.harmony.name, 'entry');
+  const projectBuildProfilePath = resolve(config.app.rootDir, config.harmony.name, 'build-profile.json5');
+  const pluginDependencePath = resolve(srcPath, 'oh-package.json5');
+  const buildProfilePath = resolve(srcPath, 'build-profile.json5');
+  const pluginInfo = await readFile(pluginDependencePath, { encoding: 'utf-8' });
+  let pluginInfoData = JSON5.parse(pluginInfo);
+  const buildProfileInfo = await readFile(buildProfilePath, { encoding: 'utf-8' });
+  let buildProfileInfoData = JSON5.parse(buildProfileInfo);
+  const projectBuildProfileInfo = await readFile(projectBuildProfilePath, { encoding: 'utf-8' });
+  let projectBuildProfileInfoData = JSON5.parse(projectBuildProfileInfo);
+
+  for (const pluginEntry of pluginJsonEntry) {
+    pluginInfoData.dependencies[pluginEntry.plugin] = `file:../${pluginEntry.plugin}`;
+    buildProfileInfoData.buildOption.arkOptions.runtimeOnly.packages.push(pluginEntry.plugin);
+
+    projectBuildProfileInfoData.modules.push({
+      name: pluginEntry.module,
+      // https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-har-import-0000001547293682-V5
+      // 引用本地模块源码（该本地模块必须与宿主模块归属于同一个工程）
+      srcPath: `./${pluginEntry.plugin}`
+    });
+  }
+  projectBuildProfileInfoData.modules.push({
+    name: "Capacitor",
+    srcPath: "./capacitor",
+  });
+  for (const plugin of plugins) {
+    if (!plugin.harmony || getPluginType(plugin, platform) !== PluginType.Core) {
+      continue;
+    }
+    const srcPath = resolve(plugin.rootPath, plugin.harmony.path);
+    // copy code source module folder to target project
+    const targetPath = resolve(config.app.rootDir, config.harmony.name, basename(plugin.rootPath));
+    mkdirSync(targetPath, { recursive: true })
+    copy(srcPath, targetPath);
+  }
+  
+  await writeFile(pluginDependencePath, JSON.stringify(pluginInfoData, null, 2), { encoding: 'utf-8' });
+  await writeFile(buildProfilePath, JSON.stringify(buildProfileInfoData, null, 2), { encoding: 'utf-8' });
+  await writeFile(projectBuildProfilePath, JSON.stringify(projectBuildProfileInfoData, null, 2), { encoding: 'utf-8' });
 }
 
 async function findHarmonyPluginJsonEntry(
@@ -125,311 +137,11 @@ async function findHarmonyPluginModulesInPlugin(
   const moduleInfo = await readJSON(resolve(srcPath, 'src/main', 'module.json5'));
   return [{
     plugin: pluginInfo.name,
+    pluginClass: moduleInfo.module.name + 'Plugin',
     module: moduleInfo.module.name,
+    moduleAlias: pluginInfo.name,
   }];
 }
-
-// export async function installGradlePlugins(
-//   config: Config,
-//   capacitorPlugins: Plugin[],
-//   cordovaPlugins: Plugin[],
-// ): Promise<void> {
-//   const capacitorAndroidPackagePath = resolveNode(
-//     config.app.rootDir,
-//     '@capacitor/android',
-//     'package.json',
-//   );
-//   if (!capacitorAndroidPackagePath) {
-//     fatal(
-//       `Unable to find ${c.strong('node_modules/@capacitor/android')}.\n` +
-//         `Are you sure ${c.strong('@capacitor/android')} is installed?`,
-//     );
-//   }
-
-//   const capacitorAndroidPath = resolve(
-//     dirname(capacitorAndroidPackagePath),
-//     'capacitor',
-//   );
-
-//   const settingsPath = config.android.platformDirAbs;
-//   const dependencyPath = config.android.appDirAbs;
-//   const relativeCapcitorAndroidPath = convertToUnixPath(
-//     relative(settingsPath, capacitorAndroidPath),
-//   );
-//   const settingsLines = `// DO NOT EDIT THIS FILE! IT IS GENERATED EACH TIME "capacitor update" IS RUN
-// include ':capacitor-android'
-// project(':capacitor-android').projectDir = new File('${relativeCapcitorAndroidPath}')
-// ${capacitorPlugins
-//   .map(p => {
-//     if (!p.android) {
-//       return '';
-//     }
-
-//     const relativePluginPath = convertToUnixPath(
-//       relative(settingsPath, p.rootPath),
-//     );
-
-//     return `
-// include ':${getGradlePackageName(p.id)}'
-// project(':${getGradlePackageName(
-//       p.id,
-//     )}').projectDir = new File('${relativePluginPath}/${p.android.path}')
-// `;
-//   })
-//   .join('')}`;
-
-//   const applyArray: any[] = [];
-//   const frameworksArray: any[] = [];
-//   let prefsArray: any[] = [];
-//   cordovaPlugins.map(p => {
-//     const relativePluginPath = convertToUnixPath(
-//       relative(dependencyPath, p.rootPath),
-//     );
-//     const frameworks = getPlatformElement(p, platform, 'framework');
-//     frameworks.map((framework: any) => {
-//       if (
-//         framework.$.custom &&
-//         framework.$.custom === 'true' &&
-//         framework.$.type &&
-//         framework.$.type === 'gradleReference'
-//       ) {
-//         applyArray.push(
-//           `apply from: "${relativePluginPath}/${framework.$.src}"`,
-//         );
-//       } else if (!framework.$.type && !framework.$.custom) {
-//         if (framework.$.src.startsWith('platform(')) {
-//           frameworksArray.push(`    implementation ${framework.$.src}`);
-//         } else {
-//           frameworksArray.push(`    implementation "${framework.$.src}"`);
-//         }
-//       }
-//     });
-//     prefsArray = prefsArray.concat(getAllElements(p, platform, 'preference'));
-//   });
-//   let frameworkString = frameworksArray.join('\n');
-//   frameworkString = await replaceFrameworkVariables(
-//     config,
-//     prefsArray,
-//     frameworkString,
-//   );
-//   const dependencyLines = `// DO NOT EDIT THIS FILE! IT IS GENERATED EACH TIME "capacitor update" IS RUN
-
-// android {
-//   compileOptions {
-//       sourceCompatibility JavaVersion.VERSION_17
-//       targetCompatibility JavaVersion.VERSION_17
-//   }
-// }
-
-// apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
-// dependencies {
-// ${capacitorPlugins
-//   .map(p => {
-//     return `    implementation project(':${getGradlePackageName(p.id)}')`;
-//   })
-//   .join('\n')}
-// ${frameworkString}
-// }
-// ${applyArray.join('\n')}
-
-// if (hasProperty('postBuildExtras')) {
-//   postBuildExtras()
-// }
-// `;
-
-//   await writeFile(
-//     join(settingsPath, 'capacitor.settings.gradle'),
-//     settingsLines,
-//   );
-//   await writeFile(
-//     join(dependencyPath, 'capacitor.build.gradle'),
-//     dependencyLines,
-//   );
-// }
-
-// export async function handleCordovaPluginsGradle(
-//   config: Config,
-//   cordovaPlugins: Plugin[],
-// ): Promise<void> {
-//   const pluginsGradlePath = join(
-//     config.android.cordovaPluginsDirAbs,
-//     'build.gradle',
-//   );
-//   const kotlinNeeded = await kotlinNeededCheck(config, cordovaPlugins);
-//   const kotlinVersionString =
-//     config.app.extConfig.cordova?.preferences?.GradlePluginKotlinVersion ??
-//     '1.8.20';
-//   const frameworksArray: any[] = [];
-//   let prefsArray: any[] = [];
-//   const applyArray: any[] = [];
-//   applyArray.push(`apply from: "cordova.variables.gradle"`);
-//   cordovaPlugins.map(p => {
-//     const relativePluginPath = convertToUnixPath(
-//       relative(config.android.cordovaPluginsDirAbs, p.rootPath),
-//     );
-//     const frameworks = getPlatformElement(p, platform, 'framework');
-//     frameworks.map((framework: any) => {
-//       if (!framework.$.type && !framework.$.custom) {
-//         frameworksArray.push(framework.$.src);
-//       } else if (
-//         framework.$.custom &&
-//         framework.$.custom === 'true' &&
-//         framework.$.type &&
-//         framework.$.type === 'gradleReference'
-//       ) {
-//         applyArray.push(
-//           `apply from: "${relativePluginPath}/${framework.$.src}"`,
-//         );
-//       }
-//     });
-//     prefsArray = prefsArray.concat(getAllElements(p, platform, 'preference'));
-//   });
-//   let frameworkString = frameworksArray
-//     .map(f => {
-//       if (f.startsWith('platform(')) {
-//         return `    implementation ${f}`;
-//       } else {
-//         return `    implementation "${f}"`;
-//       }
-//     })
-//     .join('\n');
-//   frameworkString = await replaceFrameworkVariables(
-//     config,
-//     prefsArray,
-//     frameworkString,
-//   );
-//   if (kotlinNeeded) {
-//     frameworkString += `\n    implementation "androidx.core:core-ktx:$androidxCoreKTXVersion"`;
-//     frameworkString += `\n    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"`;
-//   }
-//   const applyString = applyArray.join('\n');
-//   let buildGradle = await readFile(pluginsGradlePath, { encoding: 'utf-8' });
-//   buildGradle = buildGradle.replace(
-//     /(SUB-PROJECT DEPENDENCIES START)[\s\S]*(\/\/ SUB-PROJECT DEPENDENCIES END)/,
-//     '$1\n' + frameworkString.concat('\n') + '    $2',
-//   );
-//   buildGradle = buildGradle.replace(
-//     /(PLUGIN GRADLE EXTENSIONS START)[\s\S]*(\/\/ PLUGIN GRADLE EXTENSIONS END)/,
-//     '$1\n' + applyString.concat('\n') + '$2',
-//   );
-//   if (kotlinNeeded) {
-//     buildGradle = buildGradle.replace(
-//       /(buildscript\s{\n(\t|\s{4})repositories\s{\n((\t{2}|\s{8}).+\n)+(\t|\s{4})}\n(\t|\s{4})dependencies\s{\n(\t{2}|\s{8}).+)\n((\t|\s{4})}\n}\n)/,
-//       `$1\n        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"\n$8`,
-//     );
-//     buildGradle = buildGradle.replace(
-//       /(ext\s{)/,
-//       `$1\n    androidxCoreKTXVersion = project.hasProperty('androidxCoreKTXVersion') ? rootProject.ext.androidxCoreKTXVersion : '1.8.0'`,
-//     );
-//     buildGradle = buildGradle.replace(
-//       /(buildscript\s{)/,
-//       `$1\n    ext.kotlin_version = project.hasProperty('kotlin_version') ? rootProject.ext.kotlin_version : '${kotlinVersionString}'`,
-//     );
-//     buildGradle = buildGradle.replace(
-//       /(apply\splugin:\s'com\.android\.library')/,
-//       `$1\napply plugin: 'kotlin-android'`,
-//     );
-//     buildGradle = buildGradle.replace(
-//       /(compileOptions\s{\n((\t{2}|\s{8}).+\n)+(\t|\s{4})})\n(})/,
-//       `$1\n    sourceSets {\n        main.java.srcDirs += 'src/main/kotlin'\n    }\n$5`,
-//     );
-//   }
-//   await writeFile(pluginsGradlePath, buildGradle);
-//   const cordovaVariables = `// DO NOT EDIT THIS FILE! IT IS GENERATED EACH TIME "capacitor update" IS RUN
-// ext {
-//   cdvMinSdkVersion = project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : ${config.android.minVersion}
-//   // Plugin gradle extensions can append to this to have code run at the end.
-//   cdvPluginPostBuildExtras = []
-//   cordovaConfig = [:]
-// }`;
-//   await writeFile(
-//     join(config.android.cordovaPluginsDirAbs, 'cordova.variables.gradle'),
-//     cordovaVariables,
-//   );
-// }
-
-// async function kotlinNeededCheck(config: Config, cordovaPlugins: Plugin[]) {
-//   if (
-//     config.app.extConfig.cordova?.preferences?.GradlePluginKotlinEnabled !==
-//     'true'
-//   ) {
-//     for (const plugin of cordovaPlugins) {
-//       const androidPlatform = getPluginPlatform(plugin, platform);
-//       const sourceFiles = androidPlatform['source-file'];
-//       if (sourceFiles) {
-//         for (const srcFile of sourceFiles) {
-//           if (/^.*\.kt$/.test(srcFile['$'].src)) {
-//             return true;
-//           }
-//         }
-//       }
-//     }
-//     return false;
-//   } else {
-//     return true;
-//   }
-// }
-
-async function copyPluginsNativeFiles(
-  config: Config,
-  cordovaPlugins: Plugin[],
-) {
-  const pluginsPath = join(config.android.cordovaPluginsDirAbs, 'src', 'main');
-  for (const p of cordovaPlugins) {
-    const androidPlatform = getPluginPlatform(p, platform);
-    if (androidPlatform) {
-      const sourceFiles = androidPlatform['source-file'];
-      if (sourceFiles) {
-        for (const sourceFile of sourceFiles) {
-          const fileName = sourceFile.$.src.split('/').pop();
-          let baseFolder = 'java/';
-          if (fileName.split('.').pop() === 'aidl') {
-            baseFolder = 'aidl/';
-          }
-          const target = sourceFile.$['target-dir']
-            .replace('app/src/main/', '')
-            .replace('src/', baseFolder);
-          await copy(
-            getFilePath(config, p, sourceFile.$.src),
-            join(pluginsPath, target, fileName),
-          );
-        }
-      }
-      const resourceFiles = androidPlatform['resource-file'];
-      if (resourceFiles) {
-        for (const resourceFile of resourceFiles) {
-          const target = resourceFile.$['target'];
-          if (resourceFile.$.src.split('.').pop() === 'aar') {
-            await copy(
-              getFilePath(config, p, resourceFile.$.src),
-              join(pluginsPath, 'libs', target.split('/').pop()),
-            );
-          } else if (target !== '.') {
-            await copy(
-              getFilePath(config, p, resourceFile.$.src),
-              join(pluginsPath, target),
-            );
-          }
-        }
-      }
-      const libFiles = getPlatformElement(p, platform, 'lib-file');
-      for (const libFile of libFiles) {
-        await copy(
-          getFilePath(config, p, libFile.$.src),
-          join(pluginsPath, 'libs', libFile.$.src.split('/').pop()),
-        );
-      }
-    }
-  }
-}
-
-// async function removePluginsNativeFiles(config: Config) {
-//   await remove(config.android.cordovaPluginsDirAbs);
-//   await extractTemplate(
-//     config.cli.assets.android.cordovaPluginsTemplateArchiveAbs,
-//     config.android.cordovaPluginsDirAbs,
-//   );
-// }
 
 async function getPluginsTask(config: Config) {
   return await runTask('Updating Harmony plugins', async () => {
@@ -437,33 +149,4 @@ async function getPluginsTask(config: Config) {
     const harmonyPlugins = await getHarmonyPlugins(allPlugins);
     return harmonyPlugins;
   });
-}
-
-async function getVariablesGradleFile(config: Config) {
-  const variablesFile = resolve(
-    config.android.platformDirAbs,
-    'variables.gradle',
-  );
-  let variablesGradle = '';
-  if (await pathExists(variablesFile)) {
-    variablesGradle = await readFile(variablesFile, { encoding: 'utf-8' });
-  }
-  return variablesGradle;
-}
-
-async function replaceFrameworkVariables(
-  config: Config,
-  prefsArray: any[],
-  frameworkString: string,
-) {
-  const variablesGradle = '';//await getVariablesGradleFile(config);
-  prefsArray.map((preference: any) => {
-    if (!variablesGradle.includes(preference.$.name)) {
-      frameworkString = frameworkString.replace(
-        new RegExp(('$' + preference.$.name).replace('$', '\\$&'), 'g'),
-        preference.$.default,
-      );
-    }
-  });
-  return frameworkString;
 }

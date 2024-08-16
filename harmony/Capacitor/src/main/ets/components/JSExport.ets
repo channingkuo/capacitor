@@ -2,8 +2,7 @@ import { ArrayList, JSON } from '@kit.ArkTS';
 import { webview } from '@kit.ArkWeb';
 import { BusinessError } from '@kit.BasicServicesKit';
 import common from '@ohos.app.ability.common';
-import { CAPPlugin, CAPPluginModule } from './CAPPluginCall'
-import BuildProfile from '../../../../BuildProfile';
+import { CAPPlugin, CAPPluginModule } from './CAPPluginCall';
 
 type Context = common.UIAbilityContext;
 
@@ -15,7 +14,8 @@ export class JSExport {
   private static CALLBACK_PARAM = '_callback';
 
   static async getGlobalJS(): Promise<string> {
-    return 'window.harmony=true;\nwindow.Capacitor = { DEBUG: ' + BuildProfile.DEBUG + ', isLoggingEnabled: ' + BuildProfile.DEBUG + ', Plugins: {} };';
+    let debug = false;
+    return 'window.harmony=true;\nwindow.Capacitor = { DEBUG: ' + debug + ', isLoggingEnabled: ' + debug + ', Plugins: {} };';
   }
 
   static async getBridgeJS(context: Context): Promise<string> {
@@ -209,12 +209,12 @@ export class JSExport {
   }
 
   static getPluginModuleName(plugin: Record<string, string>): string {
-    const pluginSplit = plugin['module'];
-    return pluginSplit.toLowerCase();
+    const moduleAlias = plugin['moduleAlias'];
+    return moduleAlias;
   }
 
   static getPluginName(plugin: Record<string, string>): string {
-    const pluginName = plugin['plugin'];
+    const pluginName = plugin['pluginClass'];
     return pluginName.endsWith('Plugin') ? pluginName : `${pluginName}Plugin`;
   }
 }

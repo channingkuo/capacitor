@@ -154,7 +154,7 @@ export struct CapacitorWebView {
     const filePath = requestUri.path;
 
     if (requestUrl.startsWith(this.buildServerUrl())) {
-      const reserverFilePath = filePath === '/' ? 'www/index.html' : 'www' + filePath;
+      const reserverFilePath = filePath === '/' ? 'index.html' : filePath.slice(1);
       console.log('⚡️ back proxy request to: resource://rawfile/' + reserverFilePath);
 
       const webResourceResponse = new WebResourceResponse();

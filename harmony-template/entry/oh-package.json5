@@ -7,7 +7,7 @@
   "license": "",
   "dependencies": {
     // alias name must same to module name in module.json5
-    "capacitor": "file:../../node_modules/@capacitor/harmony/Capacitor",
+    "capacitor": "file:../capacitor",
   }
 }
 

@@ -13,21 +13,15 @@
     "url": "https://github.com/ionic-team/capacitor/issues"
   },
   "files": [
-    "entry/",
-    "hvigor/",
-    "hvigorfile.ts",
-    "oh-package-lock.json5",
-    "oh-package.json5",
-    "Capacitor/build.gradle",
-    "Capacitor/build-profile.json5",
-    "Capacitor/BuildProfile.ets",
-    "Capacitor/consumer-rules.txt",
-    "Capacitor/hvigorfile.ts",
-    "Capacitor/Index.ets",
-    "Capacitor/obfuscation-rules.txt",
-    "Capacitor/oh-package-lock.json5",
-    "Capacitor/oh-package.json5",
-    "Capacitor/src/main/"
+    "capacitor/build-profile.json5",
+    "capacitor/BuildProfile.ets",
+    "capacitor/consumer-rules.txt",
+    "capacitor/hvigorfile.ts",
+    "capacitor/Index.ets",
+    "capacitor/obfuscation-rules.txt",
+    "capacitor/oh-package-lock.json5",
+    "capacitor/oh-package.json5",
+    "capacitor/src/main/"
   ],
   "scripts": {
     "verify": "./gradlew clean lint build test -b capacitor/build.gradle"
